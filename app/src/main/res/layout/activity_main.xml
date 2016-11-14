@@ -14,4 +14,14 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/imageView"/>
+
+    <Button
+        android:text="Zrób nowe zdjęcie"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="35dp"
+        android:onClick="onPhotoClick"
+        android:id="@+id/photoBtn" />
 </RelativeLayout>

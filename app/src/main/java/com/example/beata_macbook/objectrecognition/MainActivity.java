@@ -1,9 +1,12 @@
 package com.example.beata_macbook.objectrecognition;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 
 import org.opencv.android.Utils;
@@ -24,14 +27,18 @@ public class MainActivity extends AppCompatActivity {
 
     static{ System.loadLibrary("opencv_java3"); }
 
+    //public Button photoBtn = (Button)findViewById(R.id.photoBtn);
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
+
         try {
 
-            Mat m = Utils.loadResource(MainActivity.this, R.drawable.waffles);
+            Mat m = Utils.loadResource(MainActivity.this, R.drawable.chair);
             MatOfKeyPoint matOfKeyPoint = new MatOfKeyPoint();
             FeatureDetector orbDetector = FeatureDetector.create(FeatureDetector.ORB);
             orbDetector.detect(m, matOfKeyPoint);
@@ -57,6 +64,12 @@ public class MainActivity extends AppCompatActivity {
         } catch (java.io.IOException e){
             Log.d("ERROR", e.toString());
         }
+
+    }
+
+    public void onPhotoClick(View view) {
+        Intent intent = new Intent(MainActivity.this, TakePhoto.class);
+        startActivity(intent);
     }
 
 
