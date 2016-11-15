@@ -16,7 +16,7 @@ import org.opencv.utils.Converters;
 public class DescriptorMatcher {
 
     protected final long nativeObj;
-    protected DescriptorMatcher(long addr) { nativeObj = addr; }
+    public DescriptorMatcher(long addr) { nativeObj = addr; }
 
 
     public static final int

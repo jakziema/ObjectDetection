@@ -7,17 +7,24 @@ import android.util.Log;
 import android.widget.ImageView;
 
 import org.opencv.android.Utils;
+import org.opencv.core.DMatch;
 import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.Point;
+import org.opencv.core.Scalar;
+import org.opencv.features2d.DescriptorExtractor;
+import org.opencv.features2d.DescriptorMatcher;
 import org.opencv.features2d.FeatureDetector;
 import org.opencv.features2d.Features2d;
+import org.opencv.imgproc.Imgproc;
 
 
 import com.google.gson.*;
 
+import java.util.LinkedList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -58,29 +65,74 @@ public class MainActivity extends AppCompatActivity {
 
     public void featureDetector() {
         try {
-            Mat kuba1 = Utils.loadResource(MainActivity.this, R.drawable.kuba1);
-            Mat kuba2 = Utils.loadResource(MainActivity.this, R.drawable.kuba2);
 
-            MatOfKeyPoint kuba1MatOfKeyPoint = new MatOfKeyPoint();
-            MatOfKeyPoint kuba2MatOfKeyPoint = new MatOfKeyPoint();
+
+
+
 
             FeatureDetector orbDetector = FeatureDetector.create(FeatureDetector.ORB);
+            DescriptorMatcher descriptorMatcher = new DescriptorMatcher(DescriptorMatcher.BRUTEFORCE_HAMMING);
+            DescriptorExtractor descriptorExtractor = new DescriptorExtractor(DescriptorExtractor.ORB);
+
+            // pierwsze foto
+            Mat kuba1 = Utils.loadResource(MainActivity.this, R.drawable.kuba1);
+            Imgproc.cvtColor(kuba1, kuba1, Imgproc.COLOR_RGB2GRAY);
+            MatOfKeyPoint kuba1MatOfKeyPoint = new MatOfKeyPoint();
             orbDetector.detect(kuba1,kuba1MatOfKeyPoint);
+            Mat kuba1Dessciptors = new Mat();
+            descriptorExtractor.compute(kuba1, kuba1MatOfKeyPoint, kuba1Dessciptors);
+
+            //drugie foto
+            Mat kuba2 = Utils.loadResource(MainActivity.this, R.drawable.kuba2);
+            Imgproc.cvtColor(kuba2, kuba2, Imgproc.COLOR_RGB2GRAY);
+            MatOfKeyPoint kuba2MatOfKeyPoint = new MatOfKeyPoint();
             orbDetector.detect(kuba2,kuba2MatOfKeyPoint);
+            Mat kuba2Dessciptors = new Mat();
+            descriptorExtractor.compute(kuba2, kuba2MatOfKeyPoint, kuba2Dessciptors);
 
-            Features2d f2d = new Features2d();
-            MatOfDMatch matOfDMatch = new MatOfDMatch();
+            MatOfDMatch matches = new MatOfDMatch();
+            descriptorMatcher.match(kuba1Dessciptors, kuba2Dessciptors, matches);
+
             Mat outputImage = new Mat();
-            f2d.drawMatches(kuba1, kuba1MatOfKeyPoint, kuba2, kuba2MatOfKeyPoint, matOfDMatch, outputImage );
+            Features2d f2d = new Features2d();
+
+            Scalar RED = new Scalar(255,0,0);
+            Scalar GREEN = new Scalar(0,255,0);
+
+            List<DMatch> matchesList = matches.toList();
+            Double max_dist = 0.0;
+            Double min_dist = 100.0;
+
+            for(int i = 0;i < matchesList.size(); i++){
+                Double dist = (double) matchesList.get(i).distance;
+                if (dist < min_dist)
+                    min_dist = dist;
+                if ( dist > max_dist)
+                    max_dist = dist;
+            }
+
+
+
+            LinkedList<DMatch> good_matches = new LinkedList<DMatch>();
+            for(int i = 0;i < matchesList.size(); i++){
+                if (matchesList.get(i).distance <= (1.5 * min_dist))
+                    good_matches.addLast(matchesList.get(i));
+            }
+
+            MatOfDMatch goodMatches = new MatOfDMatch();
+            goodMatches.fromList(good_matches);
+
+            MatOfByte drawnMatches = new MatOfByte();
+            f2d.drawMatches(kuba1,kuba1MatOfKeyPoint,kuba2, kuba2MatOfKeyPoint, goodMatches, outputImage, GREEN, RED, drawnMatches, Features2d.NOT_DRAW_SINGLE_POINTS);
+
+//            Bitmap bm = Bitmap.createBitmap(outputImage.cols(), outputImage.rows(),
+//                    Bitmap.Config.RGB_565);
+//            Utils.matToBitmap(outputImage, bm);
+            Log.v("GoodMatches", good_matches.toString());
 
 
 
 
-            Bitmap bm = Bitmap.createBitmap(outputImage.cols(), outputImage.rows(),
-                    Bitmap.Config.ARGB_8888);
-            Utils.matToBitmap(outputImage, bm);
-            ImageView iv = (ImageView) findViewById(R.id.imageView);
-            iv.setImageBitmap(bm);
 
         } catch (java.io.IOException e) {
 
