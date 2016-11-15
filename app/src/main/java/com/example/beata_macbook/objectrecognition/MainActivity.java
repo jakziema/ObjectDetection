@@ -9,6 +9,7 @@ import android.widget.ImageView;
 import org.opencv.android.Utils;
 import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.Point;
 import org.opencv.features2d.FeatureDetector;
@@ -29,35 +30,66 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+//        try {
+//
+//            Mat m = Utils.loadResource(MainActivity.this, R.drawable.lenna);
+//            MatOfKeyPoint matOfKeyPoint = new MatOfKeyPoint();
+//            FeatureDetector orbDetector = FeatureDetector.create(FeatureDetector.ORB);
+//            orbDetector.detect(m, matOfKeyPoint);
+//
+//            Mat outputImage = new Mat();
+//            Features2d f2d = new Features2d();
+//            f2d.drawKeypoints(m, matOfKeyPoint, outputImage);
+//
+//            Bitmap bm = Bitmap.createBitmap(outputImage.cols(), outputImage.rows(),
+//                    Bitmap.Config.ARGB_8888);
+//            Utils.matToBitmap(outputImage, bm);
+//            ImageView iv = (ImageView) findViewById(R.id.imageView);
+//            iv.setImageBitmap(bm);
+//
+//            Log.d(TAG, keypointsToJson(matOfKeyPoint));
+//
+//        } catch (java.io.IOException e){
+//            Log.d("ERROR", e.toString());
+//        }
+
+        featureDetector();
+    }
+
+    public void featureDetector() {
         try {
+            Mat kuba1 = Utils.loadResource(MainActivity.this, R.drawable.kuba1);
+            Mat kuba2 = Utils.loadResource(MainActivity.this, R.drawable.kuba2);
 
-            Mat m = Utils.loadResource(MainActivity.this, R.drawable.waffles);
-            MatOfKeyPoint matOfKeyPoint = new MatOfKeyPoint();
+            MatOfKeyPoint kuba1MatOfKeyPoint = new MatOfKeyPoint();
+            MatOfKeyPoint kuba2MatOfKeyPoint = new MatOfKeyPoint();
+
             FeatureDetector orbDetector = FeatureDetector.create(FeatureDetector.ORB);
-            orbDetector.detect(m, matOfKeyPoint);
-            List<KeyPoint> lista = matOfKeyPoint.toList();
-            int  i = 1;
-            for (KeyPoint element : lista) {
-                Log.d(TAG, i + " " +  element.toString());
-                i++;
-            }
+            orbDetector.detect(kuba1,kuba1MatOfKeyPoint);
+            orbDetector.detect(kuba2,kuba2MatOfKeyPoint);
 
-            Mat outputImage = new Mat();
-            // Your image, keypoints, and output image
             Features2d f2d = new Features2d();
-            f2d.drawKeypoints(m, matOfKeyPoint, outputImage);
+            MatOfDMatch matOfDMatch = new MatOfDMatch();
+            Mat outputImage = new Mat();
+            f2d.drawMatches(kuba1, kuba1MatOfKeyPoint, kuba2, kuba2MatOfKeyPoint, matOfDMatch, outputImage );
 
-            Bitmap bm = Bitmap.createBitmap(outputImage.cols(), outputImage.rows(),Bitmap.Config.RGB_565);
+
+
+
+            Bitmap bm = Bitmap.createBitmap(outputImage.cols(), outputImage.rows(),
+                    Bitmap.Config.ARGB_8888);
             Utils.matToBitmap(outputImage, bm);
             ImageView iv = (ImageView) findViewById(R.id.imageView);
             iv.setImageBitmap(bm);
 
-            Log.d(TAG, keypointsToJson(matOfKeyPoint));
+        } catch (java.io.IOException e) {
 
-        } catch (java.io.IOException e){
-            Log.d("ERROR", e.toString());
         }
+
+
+
     }
+
 
 
 
