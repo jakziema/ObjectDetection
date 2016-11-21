@@ -39,7 +39,8 @@ public class MainActivity extends AppCompatActivity {
 
 //        try {
 //
-//            Mat m = Utils.loadResource(MainActivity.this, R.drawable.lenna);
+//            Mat m = Utils.loadResource(MainActivity.this, R.drawable.kuba1);
+//            Imgproc.cvtColor(m, m, Imgproc.COLOR_RGB2GRAY);
 //            MatOfKeyPoint matOfKeyPoint = new MatOfKeyPoint();
 //            FeatureDetector orbDetector = FeatureDetector.create(FeatureDetector.ORB);
 //            orbDetector.detect(m, matOfKeyPoint);
@@ -49,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
 //            f2d.drawKeypoints(m, matOfKeyPoint, outputImage);
 //
 //            Bitmap bm = Bitmap.createBitmap(outputImage.cols(), outputImage.rows(),
-//                    Bitmap.Config.ARGB_8888);
+//                    Bitmap.Config.RGB_565);
 //            Utils.matToBitmap(outputImage, bm);
 //            ImageView iv = (ImageView) findViewById(R.id.imageView);
 //            iv.setImageBitmap(bm);
@@ -66,10 +67,6 @@ public class MainActivity extends AppCompatActivity {
     public void featureDetector() {
         try {
 
-
-
-
-
             FeatureDetector orbDetector = FeatureDetector.create(FeatureDetector.ORB);
             DescriptorMatcher descriptorMatcher = new DescriptorMatcher(DescriptorMatcher.BRUTEFORCE_HAMMING);
             DescriptorExtractor descriptorExtractor = new DescriptorExtractor(DescriptorExtractor.ORB);
@@ -83,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
             descriptorExtractor.compute(kuba1, kuba1MatOfKeyPoint, kuba1Dessciptors);
 
             //drugie foto
-            Mat kuba2 = Utils.loadResource(MainActivity.this, R.drawable.kuba2);
+            Mat kuba2 = Utils.loadResource(MainActivity.this, R.drawable.chair);
             Imgproc.cvtColor(kuba2, kuba2, Imgproc.COLOR_RGB2GRAY);
             MatOfKeyPoint kuba2MatOfKeyPoint = new MatOfKeyPoint();
             orbDetector.detect(kuba2,kuba2MatOfKeyPoint);
@@ -93,42 +90,46 @@ public class MainActivity extends AppCompatActivity {
             MatOfDMatch matches = new MatOfDMatch();
             descriptorMatcher.match(kuba1Dessciptors, kuba2Dessciptors, matches);
 
-            Mat outputImage = new Mat();
-            Features2d f2d = new Features2d();
+            for (DMatch match: matches.toArray()) {
 
-            Scalar RED = new Scalar(255,0,0);
-            Scalar GREEN = new Scalar(0,255,0);
-
-            List<DMatch> matchesList = matches.toList();
-            Double max_dist = 0.0;
-            Double min_dist = 100.0;
-
-            for(int i = 0;i < matchesList.size(); i++){
-                Double dist = (double) matchesList.get(i).distance;
-                if (dist < min_dist)
-                    min_dist = dist;
-                if ( dist > max_dist)
-                    max_dist = dist;
+                Log.v("MAtch", String.valueOf(match.distance));
             }
-
-
-
-            LinkedList<DMatch> good_matches = new LinkedList<DMatch>();
-            for(int i = 0;i < matchesList.size(); i++){
-                if (matchesList.get(i).distance <= (1.5 * min_dist))
-                    good_matches.addLast(matchesList.get(i));
-            }
-
-            MatOfDMatch goodMatches = new MatOfDMatch();
-            goodMatches.fromList(good_matches);
-
-            MatOfByte drawnMatches = new MatOfByte();
-            f2d.drawMatches(kuba1,kuba1MatOfKeyPoint,kuba2, kuba2MatOfKeyPoint, goodMatches, outputImage, GREEN, RED, drawnMatches, Features2d.NOT_DRAW_SINGLE_POINTS);
-
+//            Mat outputImage = new Mat();
+//            Features2d f2d = new Features2d();
+//
+//            Scalar RED = new Scalar(255,0,0);
+//            Scalar GREEN = new Scalar(0,255,0);
+//
+//            List<DMatch> matchesList = matches.toList();
+//            Double max_dist = 0.0;
+//            Double min_dist = 100.0;
+//
+//            for(int i = 0;i < matchesList.size(); i++){
+//                Double dist = (double) matchesList.get(i).distance;
+//                if (dist < min_dist)
+//                    min_dist = dist;
+//                if ( dist > max_dist)
+//                    max_dist = dist;
+//            }
+//
+//
+//
+//            LinkedList<DMatch> good_matches = new LinkedList<DMatch>();
+//            for(int i = 0;i < matchesList.size(); i++){
+//                if (matchesList.get(i).distance <= (1.5 * min_dist))
+//                    good_matches.addLast(matchesList.get(i));
+//            }
+//
+//            MatOfDMatch goodMatches = new MatOfDMatch();
+//            goodMatches.fromList(good_matches);
+//
+//            MatOfByte drawnMatches = new MatOfByte();
+//            f2d.drawMatches(kuba1,kuba1MatOfKeyPoint,kuba2, kuba2MatOfKeyPoint, goodMatches, outputImage, GREEN, RED, drawnMatches, Features2d.NOT_DRAW_SINGLE_POINTS);
+//
 //            Bitmap bm = Bitmap.createBitmap(outputImage.cols(), outputImage.rows(),
 //                    Bitmap.Config.RGB_565);
 //            Utils.matToBitmap(outputImage, bm);
-            Log.v("GoodMatches", good_matches.toString());
+//            Log.v("GoodMatches", good_matches.toString());
 
 
 
