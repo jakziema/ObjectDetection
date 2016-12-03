@@ -1,12 +1,14 @@
 package com.example.beata_macbook.objectrecognition;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.ImageView;
 
 import org.opencv.android.Utils;
+import org.opencv.core.CvType;
 import org.opencv.core.DMatch;
 import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
@@ -19,13 +21,16 @@ import org.opencv.features2d.DescriptorExtractor;
 import org.opencv.features2d.DescriptorMatcher;
 import org.opencv.features2d.FeatureDetector;
 import org.opencv.features2d.Features2d;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 
 import com.google.gson.*;
 
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
@@ -65,35 +70,36 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void featureDetector() {
-        try {
 
-            FeatureDetector orbDetector = FeatureDetector.create(FeatureDetector.ORB);
-            DescriptorMatcher descriptorMatcher = new DescriptorMatcher(DescriptorMatcher.BRUTEFORCE_HAMMING);
-            DescriptorExtractor descriptorExtractor = new DescriptorExtractor(DescriptorExtractor.ORB);
 
-            // pierwsze foto
-            Mat kuba1 = Utils.loadResource(MainActivity.this, R.drawable.kuba1);
-            Imgproc.cvtColor(kuba1, kuba1, Imgproc.COLOR_RGB2GRAY);
-            MatOfKeyPoint kuba1MatOfKeyPoint = new MatOfKeyPoint();
-            orbDetector.detect(kuba1,kuba1MatOfKeyPoint);
+            
+                FeatureDetector orbDetector = FeatureDetector.create(FeatureDetector.ORB);
+                DescriptorMatcher descriptorMatcher = new DescriptorMatcher(DescriptorMatcher.BRUTEFORCE_HAMMING);
+                DescriptorExtractor descriptorExtractor = new DescriptorExtractor(DescriptorExtractor.ORB);
+
+                Mat kuba1 = Imgcodecs.imread(getDrawable(R.drawable.kuba1).toString());
+
+                MatOfKeyPoint kuba1MatOfKeyPoint = new MatOfKeyPoint();
+                orbDetector.detect(kuba1, kuba1MatOfKeyPoint);
             Mat kuba1Dessciptors = new Mat();
             descriptorExtractor.compute(kuba1, kuba1MatOfKeyPoint, kuba1Dessciptors);
+        Log.v("Deskryptory", kuba1Dessciptors.toString());
 
-            //drugie foto
-            Mat kuba2 = Utils.loadResource(MainActivity.this, R.drawable.chair);
-            Imgproc.cvtColor(kuba2, kuba2, Imgproc.COLOR_RGB2GRAY);
-            MatOfKeyPoint kuba2MatOfKeyPoint = new MatOfKeyPoint();
-            orbDetector.detect(kuba2,kuba2MatOfKeyPoint);
-            Mat kuba2Dessciptors = new Mat();
-            descriptorExtractor.compute(kuba2, kuba2MatOfKeyPoint, kuba2Dessciptors);
 
-            MatOfDMatch matches = new MatOfDMatch();
-            descriptorMatcher.match(kuba1Dessciptors, kuba2Dessciptors, matches);
+//            //drugie foto
+//            Mat kuba2 = Utils.loadResource(MainActivity.this, R.drawable.chair);
+//            Imgproc.cvtColor(kuba2, kuba2, Imgproc.COLOR_RGB2GRAY);
+//            MatOfKeyPoint kuba2MatOfKeyPoint = new MatOfKeyPoint();
+//            orbDetector.detect(kuba2,kuba2MatOfKeyPoint);
+//            Mat kuba2Dessciptors = new Mat();
+//            descriptorExtractor.compute(kuba2, kuba2MatOfKeyPoint, kuba2Dessciptors);
 
-            for (DMatch match: matches.toArray()) {
 
-                Log.v("MAtch", String.valueOf(match.distance));
-            }
+//            MatOfDMatch matches = new MatOfDMatch();
+//            descriptorMatcher.match(kuba1Dessciptors, kuba2Dessciptors, matches);
+//            Log.v("Matches",matches.toString());
+
+
 //            Mat outputImage = new Mat();
 //            Features2d f2d = new Features2d();
 //
@@ -135,9 +141,6 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        } catch (java.io.IOException e) {
-
-        }
 
 
 
