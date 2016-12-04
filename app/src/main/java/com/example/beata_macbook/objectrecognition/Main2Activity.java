@@ -80,7 +80,7 @@ public class Main2Activity extends AppCompatActivity {
 
     }
 
-    final String url = "http://127.0.0.1:8181/";
+    final String url = "http:///192.168.0.171:8181/ObjectDetectionServer2/GetKeypoints";
 
     // prepare the Request
     JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.GET, url, null,
