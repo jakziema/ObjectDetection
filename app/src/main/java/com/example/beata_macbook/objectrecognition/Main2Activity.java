@@ -31,6 +31,7 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
@@ -55,9 +56,12 @@ public class Main2Activity extends AppCompatActivity {
 
     RequestQueue queue;
 
+    final String ip = "192.168.1.159";
+    final String port = ":8181";
+
     // PODAJ SWOJE IP , NIE MOZE BYC LOCALHOST
-    final String getURL = "http://192.168.0.171:8181/ObjectDetectionServer2/GetKeypoints";
-    final String postURL = "http://192.168.0.171:8181/ObjectDetectionServer2/SendKeypoints";
+    final String getURL = "http://" + ip + port +  "/ObjectDetectionServer2/GetKeypoints";
+    final String postURL = "http://" + ip + port +  "/ObjectDetectionServer2/SendKeypoints";
 
 
 
@@ -74,11 +78,13 @@ public class Main2Activity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                detectKeypoints();
 
+                queue.add(postRequestJSON);
 
             }
         });
+
+
 
 
     }
@@ -103,7 +109,7 @@ public class Main2Activity extends AppCompatActivity {
             }
     );
 
-    StringRequest postRequest = new StringRequest(Request.Method.POST, postURL, new Response.Listener<String>() {
+    StringRequest postRequestJSON = new StringRequest(Request.Method.POST, postURL, new Response.Listener<String>() {
         @Override
         public void onResponse(String response) {
             try {
@@ -127,17 +133,26 @@ public class Main2Activity extends AppCompatActivity {
     }){
         @Override
         protected Map<String, String> getParams() throws AuthFailureError {
-
-            Log.d("Keypoints", keypointsToJson(matOfKeyPoint).toString());
-
             Map<String,String> parameters = new HashMap<String,String>();
 
-            parameters.put("Przedmioty",keypointsToJson(matOfKeyPoint));
-
+            //parameters.put("Przedmioty","kuba krol");
+            parameters.put("Przedmioty",keypointsToJson(detectKeypoints()).toString());
             return parameters;
         }
 
+        public Map<String, String> getHeaders() throws AuthFailureError {
+            Map<String,String> params = new HashMap<String, String>();
+            params.put("Content-Type","application/x-www-form-urlencoded");
+            return params;
+        }
+
+
+
     };
+
+
+
+
 
 
     public void ClickBtn(View v){
@@ -192,17 +207,20 @@ public class Main2Activity extends AppCompatActivity {
                 }
         }
 
-    public void detectKeypoints() {
+    public MatOfKeyPoint detectKeypoints() {
+        MatOfKeyPoint matOfKeyPoint = new MatOfKeyPoint();
+
         try {
 
             Mat m = Utils.loadResource(Main2Activity.this, R.drawable.waffles);
-            MatOfKeyPoint matOfKeyPoint = new MatOfKeyPoint();
             FeatureDetector orbDetector = FeatureDetector.create(FeatureDetector.ORB);
             orbDetector.detect(m, matOfKeyPoint);
-            Log.v("Keypoints in JSON", keypointsToJson(matOfKeyPoint));
+            return matOfKeyPoint;
         } catch (java.io.IOException e) {
             Log.d("ERROR", e.toString());
         }
+
+        return matOfKeyPoint;
     }
 
 
@@ -283,8 +301,6 @@ public class Main2Activity extends AppCompatActivity {
 
         return result;
     }
-
-
 
 
 }
