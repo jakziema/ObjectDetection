@@ -4,9 +4,6 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
-import android.media.Image;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
@@ -17,6 +14,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.opencv.android.Utils;
 import org.opencv.core.KeyPoint;
@@ -24,22 +23,22 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.Point;
 import org.opencv.features2d.FeatureDetector;
-import org.opencv.features2d.Features2d;
-
-import java.net.*;
+import org.opencv.imgproc.Imgproc;
 
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.gson.*;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Main2Activity extends AppCompatActivity {
     private static final String TAG = "Main2Activity";
@@ -47,31 +46,35 @@ public class Main2Activity extends AppCompatActivity {
     static{ System.loadLibrary("opencv_java3"); }
 
     private static final int SELECTED_PICTURE=1;
-    ImageView iv;
+    ImageView imageView;
     EditText lokalizacja;
     EditText nazwa;
     Button sendButton;
     MatOfKeyPoint matOfKeyPoint;
+    ImageView iv;
 
     RequestQueue queue;
+
+    // PODAJ SWOJE IP , NIE MOZE BYC LOCALHOST
+    final String getURL = "http://192.168.0.171:8181/ObjectDetectionServer2/GetKeypoints";
+    final String postURL = "http://192.168.0.171:8181/ObjectDetectionServer2/SendKeypoints";
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
         queue = Volley.newRequestQueue(this);
-
-        iv=(ImageView)findViewById(R.id.imageView);
-
+        imageView =(ImageView)findViewById(R.id.imageView);
         sendButton=(Button)findViewById(R.id.sendButton);
 
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                queue.add(getRequest);
+                detectKeypoints();
 
 
             }
@@ -80,16 +83,15 @@ public class Main2Activity extends AppCompatActivity {
 
     }
 
-    final String url = "http:///192.168.0.171:8181/ObjectDetectionServer2/GetKeypoints";
-
     // prepare the Request
-    JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.GET, url, null,
+    JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.GET, getURL, null,
             new Response.Listener<JSONObject>()
             {
                 @Override
                 public void onResponse(JSONObject response) {
                     // display response
                     Log.d("Response", response.toString());
+
                 }
             },
             new Response.ErrorListener()
@@ -101,6 +103,42 @@ public class Main2Activity extends AppCompatActivity {
             }
     );
 
+    StringRequest postRequest = new StringRequest(Request.Method.POST, postURL, new Response.Listener<String>() {
+        @Override
+        public void onResponse(String response) {
+            try {
+                //Creating JsonObject from response String
+                JSONObject jsonObject= new JSONObject(response.toString());
+                //extracting json array from response string
+                JSONArray jsonArray = jsonObject.getJSONArray("arrname");
+                JSONObject jsonRow = jsonArray.getJSONObject(0);
+                //get value from jsonRow
+                String resultStr = jsonRow.getString("result");
+            } catch (JSONException e) {
+
+            }
+
+        }
+    }, new Response.ErrorListener() {
+        @Override
+        public void onErrorResponse(VolleyError error) {
+
+        }
+    }){
+        @Override
+        protected Map<String, String> getParams() throws AuthFailureError {
+
+            Log.d("Keypoints", keypointsToJson(matOfKeyPoint).toString());
+
+            Map<String,String> parameters = new HashMap<String,String>();
+
+            parameters.put("Przedmioty",keypointsToJson(matOfKeyPoint));
+
+            return parameters;
+        }
+
+    };
+
 
     public void ClickBtn(View v){
         Intent i = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
@@ -109,7 +147,6 @@ public class Main2Activity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-
         super.onActivityResult(requestCode, resultCode, data);
 
         switch (requestCode) {
@@ -129,7 +166,7 @@ public class Main2Activity extends AppCompatActivity {
                     options.inPreferredConfig = Bitmap.Config.ARGB_8888;
                     Bitmap yourSelectedImage = BitmapFactory.decodeFile(filePath);
 
-                    ImageView iv = (ImageView) findViewById(R.id.imageView2);
+                     iv = (ImageView) findViewById(R.id.selectedImage);
                     iv.setImageBitmap(yourSelectedImage);
 
 
@@ -148,42 +185,65 @@ public class Main2Activity extends AppCompatActivity {
                             Log.d(TAG, i + " " + element.toString());
                             i++;
                         }
+
+
                     }
                     break;
                 }
         }
 
+    public void detectKeypoints() {
+        try {
+
+            Mat m = Utils.loadResource(Main2Activity.this, R.drawable.waffles);
+            MatOfKeyPoint matOfKeyPoint = new MatOfKeyPoint();
+            FeatureDetector orbDetector = FeatureDetector.create(FeatureDetector.ORB);
+            orbDetector.detect(m, matOfKeyPoint);
+            Log.v("Keypoints in JSON", keypointsToJson(matOfKeyPoint));
+        } catch (java.io.IOException e) {
+            Log.d("ERROR", e.toString());
+        }
+    }
+
+
+
+
     public String keypointsToJson(MatOfKeyPoint matOfKeyPoint){
         if(matOfKeyPoint!=null && !matOfKeyPoint.empty())
         {
             Gson gson = new Gson();
-            JsonArray jsonArray = new JsonArray();
+            JsonObject jsonObject = new JsonObject();
+
+            final EditText lokalizacja = (EditText)findViewById(R.id.editText);
+            final EditText nazwa = (EditText)findViewById(R.id.editText2);
+            String nazwa1 = nazwa.getText().toString();
+            String lokalizacja1 = lokalizacja.getText().toString();
+
+            jsonObject.addProperty("lokalizacja", lokalizacja1);
+            jsonObject.addProperty("nazwa", nazwa1);
+
+            JsonArray keypointsArray = new JsonArray();
 
             KeyPoint[] array = matOfKeyPoint.toArray();
             for(int i=0; i<array.length; i++){
                 KeyPoint keyPoint = array[i];
 
-                JsonObject jsonObject = new JsonObject();
+                JsonObject keypoint = new JsonObject();
 
-                final EditText lokalizacja = (EditText)findViewById(R.id.editText);
-                final EditText nazwa = (EditText)findViewById(R.id.editText2);
-                String nazwa1 = nazwa.getText().toString();
-                String lokalizacja1 = lokalizacja.getText().toString();
-
-                jsonObject.addProperty("nazwa", nazwa1);
-                jsonObject.addProperty("lokalizacja", lokalizacja1);
-                jsonObject.addProperty("x",        keyPoint.pt.x);
-                jsonObject.addProperty("y",        keyPoint.pt.y);
-                jsonObject.addProperty("size",     keyPoint.size);
-                jsonObject.addProperty("angle",    keyPoint.angle);
-                jsonObject.addProperty("response", keyPoint.response);
-                jsonObject.addProperty("octave",   keyPoint.octave);
-                jsonObject.addProperty("class_id", keyPoint.class_id);
-                jsonArray.add(jsonObject);
+                keypoint.addProperty("x",        keyPoint.pt.x);
+                keypoint.addProperty("y",        keyPoint.pt.y);
+                keypoint.addProperty("size",     keyPoint.size);
+                keypoint.addProperty("angle",    keyPoint.angle);
+                keypoint.addProperty("response", keyPoint.response);
+                keypoint.addProperty("octave",   keyPoint.octave);
+                keypoint.addProperty("class_id", keyPoint.class_id);
+                keypointsArray.add(keypoint);
 
             }
 
-            String json = gson.toJson(jsonArray);
+            jsonObject.add("keypoints", keypointsArray);
+
+            String json = gson.toJson(jsonObject);
             return json;
         }
         return "{}";

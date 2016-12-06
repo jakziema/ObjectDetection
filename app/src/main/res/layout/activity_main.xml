@@ -18,7 +18,7 @@
         android:layout_height="wrap_content"
         android:onClick="ClickBtn"
         android:id="@+id/button"
-        android:layout_below="@+id/imageView2"
+        android:layout_below="@+id/selectedImage"
         android:layout_centerHorizontal="true" />
 
     <EditText
@@ -45,7 +45,7 @@
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="300dp"
-        android:id="@+id/imageView2"
+        android:id="@+id/selectedImage"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
